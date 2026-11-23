@@ -36,6 +36,7 @@
  #include <linux/unaligned.h>
  #include <linux/bitfield.h>
  #include <linux/bitmap.h>
+ #include <linux/string.h>
  
  MODULE_AUTHOR("Carlos Corbacho");
  MODULE_DESCRIPTION("Acer Laptop WMI Extras Driver");
@@ -204,7 +205,6 @@ enum acer_wmi_predator_v4_oc {
      {KE_IGNORE, 0x83, {KEY_TOUCHPAD_TOGGLE} },
      {KE_KEY, 0x85, {KEY_TOUCHPAD_TOGGLE} },
      {KE_KEY, 0x86, {KEY_WLAN} },
-     {KE_KEY, 0x87, {KEY_POWER} },
      {KE_END, 0}
  };
  
@@ -2678,7 +2678,7 @@ enum acer_wmi_predator_v4_oc {
      switch (return_value.function) {
      case WMID_HOTKEY_EVENT:
          device_state = return_value.device_state;
-         pr_info("device state: 0x%x\n", device_state);
+         pr_debug("device state: 0x%x\n", device_state);
  
          key = sparse_keymap_entry_from_scancode(acer_wmi_input_dev,
                              return_value.key_num);
@@ -3299,7 +3299,10 @@ enum acer_wmi_predator_v4_oc {
      char *token;
      char* input_ptr = input;
      size_t len = min(count, sizeof(input) - 1);
-     strncpy(input, buf, len);
+     /* strncpy() was removed in Linux 7.2; strscpy() also always terminates. */
+     if (len == 0)
+         return -EINVAL;
+     strscpy(input, buf, len + 1);
  
      if(input[len-1] == '\n'){
          input[len-1] = '\0';
@@ -3750,7 +3753,7 @@ enum acer_wmi_predator_v4_oc {
      char *input_ptr = input_buf;
      size_t len = min(count, sizeof(input_buf) - 1);
  
-     strncpy(input_buf, buf, len);
+     strscpy(input_buf, buf, len + 1);
  
      if(input_buf[len-1] == '\n'){
          input_buf[len-1] = '\0';
@@ -3923,7 +3926,7 @@ enum acer_wmi_predator_v4_oc {
      struct per_zone_color colors;
      char *input_ptr = str_buf;
      len = min(count, sizeof(str_buf) - 1);
-     strncpy(str_buf, buf, len);
+     strscpy(str_buf, buf, len + 1);
      if(str_buf[len-1] == '\n'){
          str_buf[len-1] = '\0';
      } else {
