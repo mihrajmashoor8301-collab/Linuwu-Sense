@@ -1,0 +1,10 @@
+*.o
+*.o.cmd
+*.ko
+*.ko.cmd
+*.mod
+*.mod.cmd
+.*.cmd
+Module.symvers
+modules.order
+src/linuwu_sense.mod.c
